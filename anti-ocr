@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anti-OCR FreeNetGuard</title>
+<style>
+    #canvas {
+        border: 1px solid black;
+    }
+</style>
+</head>
+<body>
+
+    <textarea id="textInput" placeholder="请输入文字" rows="4" cols="50"></textarea><br>
+    <button onclick="generateImage()">生成图片</button><br><br>
+    <canvas id="canvas" width="400" height="200"></canvas>
+
+    <script>
+        function generateImage() {
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+
+            var text = document.getElementById('textInput').value;
+
+            // 设置文字样式
+            ctx.font = '20px Arial';
+            ctx.fillStyle = 'black';
+
+            // 计算每行最大字符数
+            var maxCharsPerLine = 25;
+            var lines = [];
+            var words = text.split(' ');
+            var currentLine = '';
+            words.forEach(function(word) {
+                if (currentLine.length + word.length <= maxCharsPerLine) {
+                    currentLine += (currentLine.length === 0 ? '' : ' ') + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            });
+            if (currentLine.length > 0) {
+                lines.push(currentLine);
+            }
+
+            var lineHeight = 30;
+            var xOffset = 50;
+            var yOffset = 50;
+
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制文字
+            lines.forEach(function(line, index) {
+                var angle = Math.random() * 12; // 更大的扭曲角度
+                ctx.save();
+                ctx.translate(xOffset, yOffset + index * lineHeight);
+                ctx.rotate(angle * Math.PI / 180);
+                ctx.fillText(line, 0, 0);
+                ctx.restore();
+            });
+
+            // 添加更多不规则的线段
+            var existingLines = [];
+            for (var i = 0; i < 400; i++) {
+                var x1 = Math.random() * canvas.width;
+                var y1 = Math.random() * canvas.height;
+                var x2 = Math.random() * canvas.width;
+                var y2 = Math.random() * canvas.height;
+                
+                var slope = (y2 - y1) / (x2 - x1); // 计算斜率
+                
+                // 检查与已有线段的斜率
+                var skip = false;
+                for (var j = 0; j < existingLines.length; j++) {
+                    var existingSlope = existingLines[j];
+                    if (Math.abs(slope - existingSlope) < 0.2) { // 设定斜率相似的阈值
+                        skip = true;
+                        break;
+                    }
+                }
+                
+                if (skip) continue; // 跳过生成平行线段
+                
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                
+                existingLines.push(slope); // 将新线段的斜率添加到已有线段列表中
+            }
+
+            // 添加不规则的点
+            for (var i = 0; i < 800; i++) {
+                var x = Math.random() * canvas.width;
+                var y = Math.random() * canvas.height;
+
+                ctx.beginPath();
+                ctx.arc(x, y, Math.random() * 2 + 1, 0, 2 * Math.PI); // 增加点的大小
+                ctx.fill();
+            }
+
+            // 添加随机间距的平行线
+            for (var i = 0; i < 70; i++) {
+                var y = Math.random() * canvas.height;
+                var gap = Math.random() * 5; // 随机间距
+                
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+
+                y += gap;
+            }
+        }
+    </script>
+</body>
+</html>
