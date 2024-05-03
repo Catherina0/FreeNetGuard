@@ -34,8 +34,12 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // 绘制文字
+            var lines = splitTextIntoLines(text, maxCharsPerLine); // 将文本按行分割
+            var lineHeight = 30; // 每行文字的行高
+            var xOffset = 50; // 文字的横向偏移量
+            var yOffset = 50; // 文字的纵向偏移量
             lines.forEach(function(line, index) {
-                var angle = Math.random() * 12; // 更大的扭曲角度
+                var angle = Math.random() * 6; // 随机扭曲角度
                 ctx.save();
                 ctx.translate(xOffset, yOffset + index * lineHeight);
                 ctx.rotate(angle * Math.PI / 180);
