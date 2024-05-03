@@ -29,27 +29,7 @@
             ctx.font = '20px Arial';
             ctx.fillStyle = 'black';
 
-            // 计算每行最大字符数
-            var maxCharsPerLine = 25;
-            var lines = [];
-            var words = text.split(' ');
-            var currentLine = '';
-            words.forEach(function(word) {
-                if (currentLine.length + word.length <= maxCharsPerLine) {
-                    currentLine += (currentLine.length === 0 ? '' : ' ') + word;
-                } else {
-                    lines.push(currentLine);
-                    currentLine = word;
-                }
-            });
-            if (currentLine.length > 0) {
-                lines.push(currentLine);
-            }
-
-            var lineHeight = 30;
-            var xOffset = 50;
-            var yOffset = 50;
-
+           
             // 清除画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
