@@ -96,6 +96,19 @@
                 y += gap;
             }
         }
+        // 根据窗口大小自动调整画布尺寸
+        function adjustCanvasSize() {
+            var canvas = document.getElementById('canvas');
+            canvas.width = window.innerWidth - 50; // 调整宽度
+            canvas.height = window.innerHeight - 150; // 调整高度
+        }
+
+        // 窗口大小改变时调用调整画布尺寸的函数
+        window.addEventListener('resize', adjustCanvasSize);
+
+        // 初始时调整画布尺寸
+        adjustCanvasSize();
+
     </script>
 </body>
 </html>
