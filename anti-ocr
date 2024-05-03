@@ -108,7 +108,29 @@
 
         // 初始时调整画布尺寸
         adjustCanvasSize();
-
+        // 将文本按照每行最大字符数分割成多行的函数
+function splitTextIntoLines(text, maxCharsPerLine) {
+    var lines = [];
+    var currentLine = '';
+    var index = 0;
+    while (index < text.length) {
+        var line = text.substr(index, maxCharsPerLine);
+        if (line.length < maxCharsPerLine) {
+            lines.push(line);
+            break;
+        } else {
+            var lastSpace = line.lastIndexOf(' ');
+            if (lastSpace !== -1) {
+                lines.push(line.substr(0, lastSpace));
+                index += lastSpace + 1;
+            } else {
+                lines.push(line);
+                index += maxCharsPerLine;
+            }
+        }
+    }
+    return lines;
+}
     </script>
 </body>
 </html>
