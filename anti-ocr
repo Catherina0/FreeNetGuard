@@ -13,8 +13,9 @@
 <body>
 
     <textarea id="textInput" placeholder="请输入文字" rows="4" cols="50"></textarea><br>
+    <input id="maxCharsInput" type="number" min="1" value="30" placeholder="每行最大字符数"><br>
     <button onclick="generateImage()">生成图片</button><br><br>
-    <canvas id="canvas" width="400" height="200"></canvas>
+    <canvas id="canvas"></canvas>
 
     <script>
         function generateImage() {
@@ -22,6 +23,7 @@
             var ctx = canvas.getContext('2d');
 
             var text = document.getElementById('textInput').value;
+            var maxCharsPerLine = parseInt(document.getElementById('maxCharsInput').value); // 获取每行最大字符数
 
             // 设置文字样式
             ctx.font = '20px Arial';
