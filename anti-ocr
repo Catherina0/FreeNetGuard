@@ -12,9 +12,13 @@
 </head>
 <body>
 
+    <!-- 输入文本框 -->
     <textarea id="textInput" placeholder="请输入文字" rows="4" cols="50"></textarea><br>
+    <!-- 每行最大字符数输入框 -->
     <input id="maxCharsInput" type="number" min="1" value="30" placeholder="每行最大字符数"><br>
+    <!-- 生成图片按钮 -->
     <button onclick="generateImage()">生成图片</button><br><br>
+    <!-- 画布 -->
     <canvas id="canvas"></canvas>
 
     <script>
@@ -78,7 +82,7 @@
             }
 
             // 绘制不规则点
-            for (var i = 0; i < canvas.width* canvas.height/50; i++) {
+            for (var i = 0; i < canvas.width* canvas.height/80; i++) {
                 var x = Math.random() * canvas.width;
                 var y = Math.random() * canvas.height;
 
@@ -88,7 +92,7 @@
             }
 
             // 绘制随机间距的x轴平行线
-            for (var i = 0; i < canvas.width/15; i++) {
+            for (var i = 0; i < canvas.width/10; i++) {
                 var y = Math.random() * canvas.height;
                 var gap = Math.random() * 5; // 随机间距
                 
@@ -101,7 +105,7 @@
             }
 
             // 绘制随机间距的y轴平行线
-            for (var i = 0; i < canvas.height/4; i++) {
+            for (var i = 0; i < canvas.height/20; i++) {
                 var x = Math.random() * canvas.width;
                 var gap = Math.random() * 5; // 随机间距
                 
