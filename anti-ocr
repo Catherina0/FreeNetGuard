@@ -43,7 +43,7 @@
             var xOffset = 50; // 文字的横向偏移量
             var yOffset = 50; // 文字的纵向偏移量
             lines.forEach(function(line, index) {
-                var angle = Math.random() * 6; // 随机扭曲角度
+                var angle = Math.random() * 3; // 随机扭曲角度
                 ctx.save();
                 ctx.translate(xOffset, yOffset + index * lineHeight);
                 ctx.rotate(angle * Math.PI / 180);
@@ -105,7 +105,7 @@
             }
 
             // 绘制随机间距的y轴平行线
-            for (var i = 0; i < canvas.height/20; i++) {
+            for (var i = 0; i < canvas.height/25; i++) {
                 var x = Math.random() * canvas.width;
                 var gap = Math.random() * 5; // 随机间距
                 
