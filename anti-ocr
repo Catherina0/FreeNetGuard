@@ -25,11 +25,11 @@
             var text = document.getElementById('textInput').value;
             var maxCharsPerLine = parseInt(document.getElementById('maxCharsInput').value); // 获取每行最大字符数
 
-            // 设置文字样式
+            // 设置字体和其他样式
             ctx.font = '20px Arial';
             ctx.fillStyle = 'black';
+            ctx.textBaseline = 'top'; // 将文字对齐到顶部
 
-           
             // 清除画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -47,33 +47,33 @@
                 ctx.restore();
             });
 
-            // 添加更多不规则的线段
+             // 绘制不规则线段
             var existingLines = [];
             for (var i = 0; i < canvas.width* canvas.height/30; i++) {
                 var x1 = Math.random() * canvas.width;
                 var y1 = Math.random() * canvas.height;
                 var x2 = Math.random() * canvas.width;
                 var y2 = Math.random() * canvas.height;
-                
+
                 var slope = (y2 - y1) / (x2 - x1); // 计算斜率
-                
-                // 检查与已有线段的斜率
+
+                // 检查斜率与已有线段的斜率
                 var skip = false;
                 for (var j = 0; j < existingLines.length; j++) {
                     var existingSlope = existingLines[j];
-                    if (Math.abs(slope - existingSlope) < 0.2) { // 设定斜率相似的阈值
+                    if (Math.abs(slope - existingSlope) < 0.2) { // 斜率相似的阈值
                         skip = true;
                         break;
                     }
                 }
-                
-                if (skip) continue; // 跳过生成平行线段
-                
+
+                if (skip) continue; // 跳过绘制平行线段
+
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
-                
+
                 existingLines.push(slope); // 将新线段的斜率添加到已有线段列表中
             }
 
@@ -126,6 +126,7 @@
 
         // 初始时调整画布尺寸
         adjustCanvasSize();
+
         // 将文本按照每行最大字符数分割成多行的函数
 function splitTextIntoLines(text, maxCharsPerLine) {
     var lines = [];
