@@ -51,6 +51,12 @@
                 ctx.restore();
             });
 
+            // 重新调整画布大小
+            var textWidth = ctx.measureText(lines[0]).width; // 获取第一行文字的宽度
+            var textHeight = lines.length * lineHeight; // 计算文字的总高度
+            canvas.width = textWidth + 100; // 根据文字宽度调整画布宽度
+            canvas.height = textHeight + 100; // 根据文字高度调整画布高度
+
              // 绘制不规则线段
             var existingLines = [];
             for (var i = 0; i < canvas.width* canvas.height/30; i++) {
@@ -118,36 +124,29 @@
             }
         }
 
-            // 重新调整画布大小
-            var textWidth = ctx.measureText(lines[0]).width; // 获取第一行文字的宽度
-            var textHeight = lines.length * lineHeight; // 计算文字的总高度
-            canvas.width = textWidth + 150; // 根据文字宽度调整画布宽度
-            canvas.height = textHeight + 150; // 根据文字高度调整画布高度
-
-
         // 将文本按照每行最大字符数分割成多行的函数
-function splitTextIntoLines(text, maxCharsPerLine) {
-    var lines = [];
-    var currentLine = '';
-    var index = 0;
-    while (index < text.length) {
-        var line = text.substr(index, maxCharsPerLine);
-        if (line.length < maxCharsPerLine) {
-            lines.push(line);
-            break;
-        } else {
-            var lastSpace = line.lastIndexOf(' ');
-            if (lastSpace !== -1) {
-                lines.push(line.substr(0, lastSpace));
-                index += lastSpace + 1;
-            } else {
-                lines.push(line);
-                index += maxCharsPerLine;
+        function splitTextIntoLines(text, maxCharsPerLine) {
+            var lines = [];
+            var currentLine = '';
+            var index = 0;
+            while (index < text.length) {
+                var line = text.substr(index, maxCharsPerLine);
+                if (line.length < maxCharsPerLine) {
+                    lines.push(line);
+                    break;
+                } else {
+                    var lastSpace = line.lastIndexOf(' ');
+                    if (lastSpace !== -1) {
+                        lines.push(line.substr(0, lastSpace));
+                        index += lastSpace + 1;
+                    } else {
+                        lines.push(line);
+                        index += maxCharsPerLine;
+                    }
+                }
             }
+            return lines;
         }
-    }
-    return lines;
-}
     </script>
 </body>
 </html>
