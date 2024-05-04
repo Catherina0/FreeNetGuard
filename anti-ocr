@@ -118,18 +118,12 @@
             }
         }
 
-        // 根据窗口大小自动调整画布尺寸
-        function adjustCanvasSize() {
-            var canvas = document.getElementById('canvas');
-            canvas.width = window.innerWidth - 50; // 调整宽度
-            canvas.height = window.innerHeight - 150; // 调整高度
-        }
+            // 重新调整画布大小
+            var textWidth = ctx.measureText(lines[0]).width; // 获取第一行文字的宽度
+            var textHeight = lines.length * lineHeight; // 计算文字的总高度
+            canvas.width = textWidth + 150; // 根据文字宽度调整画布宽度
+            canvas.height = textHeight + 150; // 根据文字高度调整画布高度
 
-        // 窗口大小改变时调用调整画布尺寸的函数
-        window.addEventListener('resize', adjustCanvasSize);
-
-        // 初始时调整画布尺寸
-        adjustCanvasSize();
 
         // 将文本按照每行最大字符数分割成多行的函数
 function splitTextIntoLines(text, maxCharsPerLine) {
