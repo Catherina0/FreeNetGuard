@@ -24,38 +24,33 @@
     <script>
         function generateImage() {
             var canvas = document.getElementById('canvas');
-            var ctx = canvas.getContext('2d');
+ 
+         var ctx = canvas.getContext('2d');
 
-            var text = document.getElementById('textInput').value;
-            var maxCharsPerLine = parseInt(document.getElementById('maxCharsInput').value); // 获取每行最大字符数
+         var text = document.getElementById('textInput').value;
+         var maxCharsPerLine = parseInt(document.getElementById('maxCharsInput').value);
 
-            // 设置字体和其他样式
-            ctx.font = '20px Arial';
-            ctx.fillStyle = 'black';
-            ctx.textBaseline = 'top'; // 将文字对齐到顶部
+         ctx.font = '20px Arial';
+         ctx.fillStyle = 'black';
+         ctx.textBaseline = 'top';
 
-            // 清除画布
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 绘制文字
-            var lines = splitTextIntoLines(text, maxCharsPerLine); // 将文本按行分割
-            var lineHeight = 30; // 每行文字的行高
-            var xOffset = 50; // 文字的横向偏移量
-            var yOffset = 50; // 文字的纵向偏移量
-            lines.forEach(function(line, index) {
-                var angle = Math.random() * 3; // 随机扭曲角度
-                ctx.save();
-                ctx.translate(xOffset, yOffset + index * lineHeight);
-                ctx.rotate(angle * Math.PI / 180);
-                ctx.fillText(line, 0, 0);
-                ctx.restore();
-            });
+          // 计算文本总行数
+         var totalLines = lines.length;
 
-            // 重新调整画布大小
-            var textWidth = ctx.measureText(lines[0]).width; // 获取第一行文字的宽度
-            var textHeight = lines.length * lineHeight; // 计算文字的总高度
-            canvas.width = textWidth + 100; // 根据文字宽度调整画布宽度
-            canvas.height = textHeight + 100; // 根据文字高度调整画布高度
+         // 设置画布高度为文本总行数 * 行高 + 上下边距
+         canvas.height = totalLines * lineHeight + 100;
+
+         lines.forEach(function(line, index) {
+             var angle = Math.random() * 3;
+             ctx.save();
+             ctx.translate(xOffset, yOffset + index * lineHeight);
+             ctx.rotate(angle * Math.PI / 180);
+             ctx.fillText(line, 0, 0);
+             ctx.restore();
+});
+    });
 
              // 绘制不规则线段
             var existingLines = [];
@@ -124,29 +119,45 @@
             }
         }
 
-        // 将文本按照每行最大字符数分割成多行的函数
-        function splitTextIntoLines(text, maxCharsPerLine) {
-            var lines = [];
-            var currentLine = '';
-            var index = 0;
-            while (index < text.length) {
-                var line = text.substr(index, maxCharsPerLine);
-                if (line.length < maxCharsPerLine) {
-                    lines.push(line);
-                    break;
-                } else {
-                    var lastSpace = line.lastIndexOf(' ');
-                    if (lastSpace !== -1) {
-                        lines.push(line.substr(0, lastSpace));
-                        index += lastSpace + 1;
-                    } else {
-                        lines.push(line);
-                        index += maxCharsPerLine;
-                    }
-                }
-            }
-            return lines;
+        // 根据窗口大小自动调整画布尺寸
+        function adjustCanvasSize() {
+            var canvas = document.getElementById('canvas');
+            canvas.width = maxCharsPerLin*3; // 调整宽度
+            canvas.height = window.innerHeight - 150; // 调整高度
         }
+
+        // 窗口大小改变时调用调整画布尺寸的函数
+        window.addEventListener('resize', adjustCanvasSize);
+
+        // 初始时调整画布尺寸
+        adjustCanvasSize();
+
+        // 将文本按照每行最大字符数分割成多行的函数
+    function splitTextIntoLines(text, maxCharsPerLine) {
+    var lines = [];
+    var currentLine = '';
+    var index = 0;
+    while (index < text.length) {
+        var line = text.substr(index, maxCharsPerLine);
+        if (line.length < maxCharsPerLine) {
+            lines.push(line);
+            break;
+        } else if (line.length === maxCharsPerLine) {
+            lines.push(line);
+            index += maxCharsPerLine;
+        } else {
+            var lastSpace = line.lastIndexOf(' ');
+            if (lastSpace !== -1) {
+                lines.push(line.substr(0, lastSpace));
+                index += lastSpace + 1;
+            } else {
+                lines.push(line);
+                index += maxCharsPerLine;
+            }
+        }
+    }
+    return lines;
+}
     </script>
 </body>
 </html>
