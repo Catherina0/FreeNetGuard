@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URL反追踪</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        input[type="text"] {
+            padding: 5px 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 5px 15px;
+            font-size: 16px;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>URL反追踪</h1>
+    <input type="text" id="inputText" placeholder="输入文本或链接">
+    <button onclick="getFullUrl()">解析</button>
+    <div id="result"></div>
+
+    <script>
+        function extractUrl(input) {
+            const urlPattern = /(https?:\/\/[^\s]+)/gi;
+            const match = input.match(urlPattern);
+            return match ? match[0] : null;
+        }
+
+        function getFullUrl() {
+            const inputText = document.getElementById("inputText").value.trim();
+            const shortUrl = extractUrl(inputText);
+
+            if (!shortUrl) {
+                document.getElementById("result").textContent = "请输入有效的URL";
+                return;
+            }
+
+            const apiUrl = `https://api.oioweb.cn/api/site/UrlRevert?url=${encodeURIComponent(shortUrl)}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById("result");
+                    resultDiv.innerHTML = '';
+
+                    if (data.code === 200) {
+                        let fullUrl = data.result;
+
+                        // 过滤掉链接中?后的部分
+                        fullUrl = fullUrl.split('?')[0];
+
+                        const urlText = document.createElement('span');
+                        urlText.textContent = `长链接: ${fullUrl}`;
+                        resultDiv.appendChild(urlText);
+
+                        const copyButton = document.createElement('button');
+                        copyButton.textContent = '复制链接';
+                        copyButton.onclick = () => {
+                            navigator.clipboard.writeText(fullUrl);
+                            alert('链接已复制到剪贴板');
+                        };
+                        resultDiv.appendChild(copyButton);
+                    } else if (data.code === 400) {
+                        // 如果返回代码是 400，直接执行过滤和输出
+                        let fullUrl = shortUrl;
+                        fullUrl = fullUrl.split('?')[0];
+
+                        const urlText = document.createElement('span');
+                        urlText.textContent = `长链接: ${fullUrl}`;
+                        resultDiv.appendChild(urlText);
+
+                        const copyButton = document.createElement('button');
+                        copyButton.textContent = '复制链接';
+                        copyButton.onclick = () => {
+                            navigator.clipboard.writeText(fullUrl);
+                            alert('链接已复制到剪贴板');
+                        };
+                        resultDiv.appendChild(copyButton);
+                    } else {
+                        let errorMessage;
+                        switch (data.code) {
+                            case 500:
+                                errorMessage = "服务器端出错导致失败";
+                                break;
+                            default:
+                                errorMessage = "解析失败";
+                        }
+                        resultDiv.textContent = errorMessage;
+                    }
+                })
+                .catch(error => {
+                    console.error("出现错误:", error);
+                    document.getElementById("result").textContent = "解析失败";
+                });
+        }
+    </script>
+</body>
+</html>
