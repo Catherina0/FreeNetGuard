@@ -39,6 +39,30 @@
             return match ? match[0] : null;
         }
 
+        // 预定义的跟踪器参数列表
+        const trackerParams = [
+             'ref', 'referrer', 'gclid', 'fbclid', 'dclid', 'msclkid', 'icid',
+            'mcid', 'gbraid', 'wbraid', 's_kwcid', 'utm_psn', 'campaign', 'utm_source', 
+            'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id', 
+            'utm_nooverride', 'utm_expid', 'utm_referrer', 'uct2', '-Arouter', 'buvid', 'from_spmid', 'is_story_h5', 'mid', 'p', 'plat_id', 
+            'share_from', 'share_medium', 'share_plat', 'share_session_id', 
+            'share_source', 'share_tag', 'spmid', 'timestamp', 'unique_k', 'up_id','app_version','dlt'
+        ];
+
+        // 去除跟踪器的函数
+        function removeTrackers(url, customParams = []) {
+            const allTrackerParams = [...trackerParams, ...customParams];
+            const urlObj = new URL(url);
+            const params = new URLSearchParams(urlObj.search);
+
+            for (const param of allTrackerParams) {
+                params.delete(param);
+            }
+
+            urlObj.search = params.toString();
+            return urlObj.toString();
+        }
+
         function getFullUrl() {
             const inputText = document.getElementById("inputText").value.trim();
             const shortUrl = extractUrl(inputText);
@@ -58,47 +82,50 @@
 
                     if (data.code === 200) {
                         let fullUrl = data.result;
+                        let filteredUrl = removeTrackers(fullUrl);
 
-                        // 过滤掉链接中?后的部分
-                        fullUrl = fullUrl.split('?')[0];
+                        // 输出完整的未经过滤掉的长链接
+                        const fullUrlText = document.createElement('span');
+                        fullUrlText.textContent = `完整链接: ${fullUrl}`;
+                        resultDiv.appendChild(fullUrlText);
+                        resultDiv.appendChild(document.createElement('br')); // 添加换行
 
+                        // 输出过滤后的链接
                         const urlText = document.createElement('span');
-                        urlText.textContent = `长链接: ${fullUrl}`;
+                        urlText.textContent = `过滤后链接: ${filteredUrl}`;
                         resultDiv.appendChild(urlText);
 
                         const copyButton = document.createElement('button');
-                        copyButton.textContent = '复制链接';
+                        copyButton.textContent = '复制过滤后链接';
                         copyButton.onclick = () => {
-                            navigator.clipboard.writeText(fullUrl);
+                            navigator.clipboard.writeText(filteredUrl);
                             alert('链接已复制到剪贴板');
                         };
                         resultDiv.appendChild(copyButton);
                     } else if (data.code === 400) {
-                        // 如果返回代码是 400，直接执行过滤和输出
                         let fullUrl = shortUrl;
-                        fullUrl = fullUrl.split('?')[0];
+                        let filteredUrl = removeTrackers(fullUrl);
 
+                        // 输出完整的未经过滤掉的长链接
+                        const fullUrlText = document.createElement('span');
+                        fullUrlText.textContent = `完整链接: ${fullUrl}`;
+                        resultDiv.appendChild(fullUrlText);
+                        resultDiv.appendChild(document.createElement('br')); // 添加换行
+
+                        // 输出过滤后的链接
                         const urlText = document.createElement('span');
-                        urlText.textContent = `长链接: ${fullUrl}`;
+                        urlText.textContent = `过滤后链接: ${filteredUrl}`;
                         resultDiv.appendChild(urlText);
 
                         const copyButton = document.createElement('button');
-                        copyButton.textContent = '复制链接';
+                        copyButton.textContent = '复制过滤后链接';
                         copyButton.onclick = () => {
-                            navigator.clipboard.writeText(fullUrl);
+                            navigator.clipboard.writeText(filteredUrl);
                             alert('链接已复制到剪贴板');
                         };
                         resultDiv.appendChild(copyButton);
                     } else {
-                        let errorMessage;
-                        switch (data.code) {
-                            case 500:
-                                errorMessage = "服务器端出错导致失败";
-                                break;
-                            default:
-                                errorMessage = "解析失败";
-                        }
-                        resultDiv.textContent = errorMessage;
+                        resultDiv.textContent = "解析失败";
                     }
                 })
                 .catch(error => {
