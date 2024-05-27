@@ -46,7 +46,7 @@
             'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id', 
             'utm_nooverride', 'utm_expid', 'utm_referrer', 'uct2', '-Arouter', 'buvid', 'from_spmid', 'is_story_h5', 'mid', 'p', 'plat_id', 
             'share_from', 'share_medium', 'share_plat', 'share_session_id', 
-            'share_source', 'share_tag', 'spmid', 'timestamp', 'unique_k', 'up_id','app_version','dlt'
+            'share_source', 'share_tag', 'spmid', 'timestamp', 'unique_k', 'up_id','app_version','dlt','channelId','ADTAG','openinqqmusic','songtype','source',
         ];
 
         // 去除跟踪器的函数
