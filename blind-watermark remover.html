@@ -1,17 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>blind-watermark remover</title>
+  <title>盲水印清除工具</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+    #downloadBtn {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h3> 盲水印清除工具</h3>
+  <h1>盲水印清除工具</h1>
+  <label for="fileInput">选择图片文件：</label>
   <input type="file" id="fileInput" accept="image/*"> 
   <canvas id="outputCanvas"></canvas>
   
   <button id="downloadBtn" disabled>下载</button> 
-  <h5>已测试部分常见算法，清除>1Mb的文件时可能需要1分钟以上的时间</h5>
+  <p>已测试部分常见算法，清除大于1MB的文件时可能需要1分钟以上的时间</p>
+  
   <script>
     const fileInput = document.getElementById('fileInput');
     const outputCanvas = document.getElementById('outputCanvas');
@@ -20,6 +37,11 @@
 
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
+      if (!file) {
+        alert('请先选择一个图片文件。');
+        return;
+      }
+
       const reader = new FileReader();
 
       reader.onload = () => {
@@ -29,9 +51,17 @@
           compressedImageData = processImage(img); 
           outputCanvas.width = img.width;
           outputCanvas.height = img.height;
-          outputCanvas.getContext('2d').putImageData(compressedImageData, 0, 0); 
+          const ctx = outputCanvas.getContext('2d');
+          ctx.putImageData(compressedImageData, 0, 0); 
           downloadBtn.disabled = false; 
         }
+        img.onerror = () => {
+          alert('图片加载失败，请检查文件是否为有效的图片格式。');
+        }
+      }
+
+      reader.onerror = () => {
+        alert('文件读取失败，请重试。');
       }
 
       reader.readAsDataURL(file);
@@ -58,21 +88,24 @@
         }
       }
 
-      // 列表
+      // 获取唯一颜色列表
       const uniqueColors = [...colorMap.values()];
       const threshold = 32; // 控制压缩程度
       const compressedColors = compressColors(uniqueColors, threshold); 
 
-      // 替换
+      // 替换颜色
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
         const color = `${r},${g},${b}`;
-        const compressedColor = compressedColors.get(colorMap.get(color));
-        data[i] = compressedColor[0];
-        data[i + 1] = compressedColor[1];
-        data[i + 2] = compressedColor[2];
+        const originalColor = colorMap.get(color);
+        const compressedColor = compressedColors.get(originalColor.join(','));
+        if (compressedColor) {
+          data[i] = compressedColor[0];
+          data[i + 1] = compressedColor[1];
+          data[i + 2] = compressedColor[2];
+        }
       }
 
       return imageData;
@@ -81,26 +114,25 @@
     // 压缩颜色
     function compressColors(colors, threshold) {
       const compressedColors = new Map();
-      const sortedColors = colors.slice().sort((a, b) => getColorDistance(a, b)); // 按颜色距离排序
 
-      for (const color of sortedColors) {
+      for (const color of colors) {
         let closestColor = null;
         let minDistance = Infinity;
 
-        // 找
-        for (const [compressedColor, rgb] of compressedColors) {
+        // 查找最接近的已压缩颜色
+        for (const [compressedColorKey, rgb] of compressedColors) {
           const distance = getColorDistance(color, rgb);
           if (distance < minDistance) {
             minDistance = distance;
-            closestColor = compressedColor;
+            closestColor = compressedColorKey;
           }
         }
 
-        // 映射
-        if (minDistance > threshold) {
-          compressedColors.set(color, color);
+        // 映射颜色
+        if (minDistance > threshold || !closestColor) {
+          compressedColors.set(color.join(','), color);
         } else {
-          compressedColors.set(color, closestColor);
+          compressedColors.set(color.join(','), compressedColors.get(closestColor));
         }
       }
 

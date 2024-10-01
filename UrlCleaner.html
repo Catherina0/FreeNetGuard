@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL反追踪</title>
     <style>
         body {
@@ -12,11 +14,15 @@
         input[type="text"] {
             padding: 5px 10px;
             font-size: 16px;
+            width: 300px;
+            max-width: 80%;
         }
 
         button {
             padding: 5px 15px;
             font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
         }
 
         #result {
@@ -24,12 +30,23 @@
             font-size: 18px;
             font-weight: bold;
         }
+
+        #result span {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        #copyButton {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h1>URL短链接还原&反追踪</h1>
     <input type="text" id="inputText" placeholder="输入文本或链接">
-    <button onclick="getFullUrl()">解析</button>
+    <button id="parseButton">解析</button>
     <div id="result"></div>
 
     <script>
@@ -51,88 +68,68 @@
 
         // 去除跟踪器的函数
         function removeTrackers(url, customParams = []) {
-            const allTrackerParams = [...trackerParams, ...customParams];
-            const urlObj = new URL(url);
-            const params = new URLSearchParams(urlObj.search);
-
-            for (const param of allTrackerParams) {
-                params.delete(param);
+            try {
+                const allTrackerParams = [...trackerParams, ...customParams];
+                const urlObj = new URL(url);
+                allTrackerParams.forEach(param => urlObj.searchParams.delete(param));
+                return urlObj.toString();
+            } catch (error) {
+                console.error("无效的URL:", error);
+                return url;
             }
-
-            urlObj.search = params.toString();
-            return urlObj.toString();
         }
 
-        function getFullUrl() {
+        async function getFullUrl() {
             const inputText = document.getElementById("inputText").value.trim();
             const shortUrl = extractUrl(inputText);
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = '';
 
             if (!shortUrl) {
-                document.getElementById("result").textContent = "请输入有效的URL";
+                resultDiv.textContent = "请输入有效的URL";
                 return;
             }
 
-            const apiUrl = `https://api.oioweb.cn/api/site/UrlRevert?url=${encodeURIComponent(shortUrl)}`;
+            try {
+                const apiUrl = `https://api.oioweb.cn/api/site/UrlRevert?url=${encodeURIComponent(shortUrl)}`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
 
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const resultDiv = document.getElementById("result");
-                    resultDiv.innerHTML = '';
+                let fullUrl, filteredUrl;
 
-                    if (data.code === 200) {
-                        let fullUrl = data.result;
-                        let filteredUrl = removeTrackers(fullUrl);
+                if (data.code === 200 && data.result) {
+                    fullUrl = data.result;
+                    filteredUrl = removeTrackers(fullUrl);
+                } else {
+                    fullUrl = shortUrl;
+                    filteredUrl = removeTrackers(shortUrl);
+                }
 
-                        // 输出完整的未经过滤掉的长链接
-                        const fullUrlText = document.createElement('span');
-                        fullUrlText.textContent = `完整链接: ${fullUrl}`;
-                        resultDiv.appendChild(fullUrlText);
-                        resultDiv.appendChild(document.createElement('br')); // 添加换行
-
-                        // 输出过滤后的链接
-                        const urlText = document.createElement('span');
-                        urlText.textContent = `过滤后链接: ${filteredUrl}`;
-                        resultDiv.appendChild(urlText);
-
-                        const copyButton = document.createElement('button');
-                        copyButton.textContent = '复制过滤后链接';
-                        copyButton.onclick = () => {
-                            navigator.clipboard.writeText(filteredUrl);
-                            alert('链接已复制到剪贴板');
-                        };
-                        resultDiv.appendChild(copyButton);
-                    } else if (data.code === 400) {
-                        let fullUrl = shortUrl;
-                        let filteredUrl = removeTrackers(fullUrl);
-
-                        // 输出完整的未经过滤掉的长链接
-                        const fullUrlText = document.createElement('span');
-                        fullUrlText.textContent = `完整链接: ${fullUrl}`;
-                        resultDiv.appendChild(fullUrlText);
-                        resultDiv.appendChild(document.createElement('br')); // 添加换行
-
-                        // 输出过滤后的链接
-                        const urlText = document.createElement('span');
-                        urlText.textContent = `过滤后链接: ${filteredUrl}`;
-                        resultDiv.appendChild(urlText);
-
-                        const copyButton = document.createElement('button');
-                        copyButton.textContent = '复制过滤后链接';
-                        copyButton.onclick = () => {
-                            navigator.clipboard.writeText(filteredUrl);
-                            alert('链接已复制到剪贴板');
-                        };
-                        resultDiv.appendChild(copyButton);
-                    } else {
-                        resultDiv.textContent = "解析失败";
-                    }
-                })
-                .catch(error => {
-                    console.error("出现错误:", error);
-                    document.getElementById("result").textContent = "解析失败";
-                });
+                displayResults(resultDiv, fullUrl, filteredUrl);
+            } catch (error) {
+                console.error("出现错误:", error);
+                resultDiv.textContent = "解析失败，请检查网络连接或稍后再试。";
+            }
         }
+
+        function displayResults(resultDiv, fullUrl, filteredUrl) {
+            resultDiv.innerHTML = `
+                <span>完整链接: ${fullUrl}</span>
+                <span>过滤后链接: ${filteredUrl}</span>
+                <button id="copyButton">复制过滤后链接</button>
+            `;
+
+            document.getElementById('copyButton').addEventListener('click', () => {
+                navigator.clipboard.writeText(filteredUrl)
+                    .then(() => alert('链接已复制到剪贴板'))
+                    .catch(err => {
+                        console.error('复制失败:', err);
+                        alert('复制失败，请手动复制链接');
+                    });
+            });
+        }
+
+        document.getElementById('parseButton').addEventListener('click', getFullUrl);
     </script>
 </body>
 </html>
