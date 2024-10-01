@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>blind-watermark remover</title>
+</head>
+<body>
+  <h3> 盲水印清除工具</h3>
+  <input type="file" id="fileInput" accept="image/*"> 
+  <canvas id="outputCanvas"></canvas>
+  
+  <button id="downloadBtn" disabled>下载</button> 
+  <h5>已测试部分常见算法，清除>1Mb的文件时可能需要1分钟以上的时间</h5>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const outputCanvas = document.getElementById('outputCanvas');
+    const downloadBtn = document.getElementById('downloadBtn');
+    let compressedImageData = null; 
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const img = new Image();
+        img.src = reader.result;
+        img.onload = () => {
+          compressedImageData = processImage(img); 
+          outputCanvas.width = img.width;
+          outputCanvas.height = img.height;
+          outputCanvas.getContext('2d').putImageData(compressedImageData, 0, 0); 
+          downloadBtn.disabled = false; 
+        }
+      }
+
+      reader.readAsDataURL(file);
+    });
+
+    function processImage(img) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      const colorMap = new Map();
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const color = `${r},${g},${b}`; 
+        if (!colorMap.has(color)) {
+          colorMap.set(color, [r, g, b]);
+        }
+      }
+
+      // 列表
+      const uniqueColors = [...colorMap.values()];
+      const threshold = 32; // 控制压缩程度
+      const compressedColors = compressColors(uniqueColors, threshold); 
+
+      // 替换
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const color = `${r},${g},${b}`;
+        const compressedColor = compressedColors.get(colorMap.get(color));
+        data[i] = compressedColor[0];
+        data[i + 1] = compressedColor[1];
+        data[i + 2] = compressedColor[2];
+      }
+
+      return imageData;
+    }
+
+    // 压缩颜色
+    function compressColors(colors, threshold) {
+      const compressedColors = new Map();
+      const sortedColors = colors.slice().sort((a, b) => getColorDistance(a, b)); // 按颜色距离排序
+
+      for (const color of sortedColors) {
+        let closestColor = null;
+        let minDistance = Infinity;
+
+        // 找
+        for (const [compressedColor, rgb] of compressedColors) {
+          const distance = getColorDistance(color, rgb);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestColor = compressedColor;
+          }
+        }
+
+        // 映射
+        if (minDistance > threshold) {
+          compressedColors.set(color, color);
+        } else {
+          compressedColors.set(color, closestColor);
+        }
+      }
+
+      return compressedColors;
+    }
+
+    function getColorDistance(color1, color2) {
+      const r1 = color1[0], g1 = color1[1], b1 = color1[2];
+      const r2 = color2[0], g2 = color2[1], b2 = color2[2];
+      return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+    }
+
+    // 下载
+    downloadBtn.addEventListener('click', () => {
+      if (compressedImageData) {
+        downloadImage(compressedImageData);
+      }
+    });
+
+    function downloadImage(imageData) {
+      const canvas = document.createElement('canvas');
+      canvas.width = imageData.width;
+      canvas.height = imageData.height;
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(imageData, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+
+      const link = document.createElement('a');
+      link.download = 'compressed-image.png';
+      link.href = dataURL;
+      link.click();
+    }
+  </script>
+</body>
+</html>

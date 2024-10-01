@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anti-OCR FreeNetGuard</title>
+<style>
+    #canvas {
+        border: 1px solid black;
+    }
+</style>
+</head>
+<body>
+
+    <!-- 输入文本框 -->
+    <textarea id="textInput" placeholder="请输入文字" rows="4" cols="50"></textarea><br>
+    <!-- 每行最大字符数输入框 -->
+    <input id="maxCharsInput" type="number" min="1" value="30" placeholder="每行最大字符数"><br>
+    <!-- 生成图片按钮 -->
+    <button onclick="generateImage()">生成图片</button><br><br>
+    <!-- 画布 -->
+    <canvas id="canvas"></canvas>
+
+    <script>
+        function generateImage() {
+            var canvas = document.getElementById('canvas');
+ 
+         var ctx = canvas.getContext('2d');
+
+         var text = document.getElementById('textInput').value;
+         var maxCharsPerLine = parseInt(document.getElementById('maxCharsInput').value);
+
+         ctx.font = '20px Arial';
+         ctx.fillStyle = 'black';
+         ctx.textBaseline = 'top';
+
+         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // 计算文本总行数
+         var totalLines = lines.length;
+
+         // 设置画布高度为文本总行数 * 行高 + 上下边距
+         canvas.height = totalLines * lineHeight + 100;
+
+         lines.forEach(function(line, index) {
+             var angle = Math.random() * 3;
+             ctx.save();
+             ctx.translate(xOffset, yOffset + index * lineHeight);
+             ctx.rotate(angle * Math.PI / 180);
+             ctx.fillText(line, 0, 0);
+             ctx.restore();
+});
+    });
+
+             // 绘制不规则线段
+            var existingLines = [];
+            for (var i = 0; i < canvas.width* canvas.height/30; i++) {
+                var x1 = Math.random() * canvas.width;
+                var y1 = Math.random() * canvas.height;
+                var x2 = Math.random() * canvas.width;
+                var y2 = Math.random() * canvas.height;
+
+                var slope = (y2 - y1) / (x2 - x1); // 计算斜率
+
+                // 检查斜率与已有线段的斜率
+                var skip = false;
+                for (var j = 0; j < existingLines.length; j++) {
+                    var existingSlope = existingLines[j];
+                    if (Math.abs(slope - existingSlope) < 0.2) { // 斜率相似的阈值
+                        skip = true;
+                        break;
+                    }
+                }
+
+                if (skip) continue; // 跳过绘制平行线段
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                existingLines.push(slope); // 将新线段的斜率添加到已有线段列表中
+            }
+
+            // 绘制不规则点
+            for (var i = 0; i < canvas.width* canvas.height/80; i++) {
+                var x = Math.random() * canvas.width;
+                var y = Math.random() * canvas.height;
+
+                ctx.beginPath();
+                ctx.arc(x, y, Math.random()*1.5 + 1, 0, 2 * Math.PI); // 增加点的大小
+                ctx.fill();
+            }
+
+            // 绘制随机间距的x轴平行线
+            for (var i = 0; i < canvas.width/10; i++) {
+                var y = Math.random() * canvas.height;
+                var gap = Math.random() * 5; // 随机间距
+                
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+
+                y += gap;
+            }
+
+            // 绘制随机间距的y轴平行线
+            for (var i = 0; i < canvas.height/25; i++) {
+                var x = Math.random() * canvas.width;
+                var gap = Math.random() * 5; // 随机间距
+                
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+
+                x += gap;
+            }
+        }
+
+        // 根据窗口大小自动调整画布尺寸
+        function adjustCanvasSize() {
+            var canvas = document.getElementById('canvas');
+            canvas.width = maxCharsPerLin*3; // 调整宽度
+            canvas.height = window.innerHeight - 150; // 调整高度
+        }
+
+        // 窗口大小改变时调用调整画布尺寸的函数
+        window.addEventListener('resize', adjustCanvasSize);
+
+        // 初始时调整画布尺寸
+        adjustCanvasSize();
+
+        // 将文本按照每行最大字符数分割成多行的函数
+    function splitTextIntoLines(text, maxCharsPerLine) {
+    var lines = [];
+    var currentLine = '';
+    var index = 0;
+    while (index < text.length) {
+        var line = text.substr(index, maxCharsPerLine);
+        if (line.length < maxCharsPerLine) {
+            lines.push(line);
+            break;
+        } else if (line.length === maxCharsPerLine) {
+            lines.push(line);
+            index += maxCharsPerLine;
+        } else {
+            var lastSpace = line.lastIndexOf(' ');
+            if (lastSpace !== -1) {
+                lines.push(line.substr(0, lastSpace));
+                index += lastSpace + 1;
+            } else {
+                lines.push(line);
+                index += maxCharsPerLine;
+            }
+        }
+    }
+    return lines;
+}
+    </script>
+</body>
+</html>
