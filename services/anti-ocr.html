@@ -10,7 +10,7 @@
             background-color: #fff;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Microsoft YaHei', sans-serif;
             text-align: center;
             margin: 20px;
         }
@@ -59,11 +59,11 @@
             }
 
             const lines = splitTextIntoLines(text, maxCharsPerLine);
-            const lineHeight = 45; // 增加行高以适应更大的字体
-            const xOffset = 50; // 增加X轴偏移量
-            const yOffset = 50; // 增加Y轴偏移量
+            const lineHeight = 50; // 行高
+            const xOffset = 50; // X轴偏移量
+            const yOffset = 50; // Y轴偏移量
 
-            ctx.font = '40px Arial'; // 字体大小
+            ctx.font = "30px 'Microsoft YaHei', sans-serif"; //字体大小
             ctx.fillStyle = 'black';
             ctx.textBaseline = 'top';
 
