@@ -56,6 +56,9 @@
             return match ? match[0] : null;
         }
 
+        // 需要直接过滤的网站域名列表
+        const directFilterDomains = ['bilibili.com'];
+
         // 预定义的跟踪器参数列表
         const trackerParams = [
              'ref', 'referrer', 'gclid', 'fbclid', 'dclid', 'msclkid', 'icid',
@@ -64,6 +67,7 @@
             'utm_nooverride', 'utm_expid', 'utm_referrer', 'uct2', '-Arouter', 'buvid', 'from_spmid', 'is_story_h5', 'mid', 'p', 'plat_id', 
             'share_from', 'share_medium', 'share_plat', 'share_session_id', 
             'share_source', 'share_tag', 'spmid', 'timestamp', 'unique_k', 'up_id','app_version','dlt','channelId','ADTAG','openinqqmusic','songtype','source',
+            'vd_source'
         ];
 
         // 去除跟踪器的函数
@@ -91,18 +95,25 @@
             }
 
             try {
-                const apiUrl = `https://api.oioweb.cn/api/site/UrlRevert?url=${encodeURIComponent(shortUrl)}`;
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-
                 let fullUrl, filteredUrl;
 
-                if (data.code === 200 && data.result) {
-                    fullUrl = data.result;
-                    filteredUrl = removeTrackers(fullUrl);
-                } else {
+                if (directFilterDomains.some(domain => shortUrl.includes(domain))) {
+                    // 对于直接过滤列表中的链接，直接进行过滤
                     fullUrl = shortUrl;
                     filteredUrl = removeTrackers(shortUrl);
+                } else {
+                    // 对于其他链接，调用 API 进行还原
+                    const apiUrl = `https://api.oioweb.cn/api/site/UrlRevert?url=${encodeURIComponent(shortUrl)}`;
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+
+                    if (data.code === 200 && data.result) {
+                        fullUrl = data.result;
+                        filteredUrl = removeTrackers(fullUrl);
+                    } else {
+                        fullUrl = shortUrl;
+                        filteredUrl = removeTrackers(shortUrl);
+                    }
                 }
 
                 displayResults(resultDiv, fullUrl, filteredUrl);
