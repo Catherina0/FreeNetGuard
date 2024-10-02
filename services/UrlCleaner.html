@@ -41,6 +41,11 @@
             font-size: 14px;
             cursor: pointer;
         }
+
+        .footer-note {
+            font-size: 12px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -67,18 +72,40 @@
             'utm_nooverride', 'utm_expid', 'utm_referrer', 'uct2', '-Arouter', 'buvid', 'from_spmid', 'is_story_h5', 'mid', 'p', 'plat_id', 
             'share_from', 'share_medium', 'share_plat', 'share_session_id', 
             'share_source', 'share_tag', 'spmid', 'timestamp', 'unique_k', 'up_id','app_version','dlt','channelId','ADTAG','openinqqmusic','songtype','source',
-            'vd_source'
+            'vd_source','ut_sk','sourceType','suid','shareUniqueId','un','share_crt_v','spm','wxsign','tbSocialPopKey','short_name','sp_tk','bxsign'
         ];
 
         // 去除跟踪器的函数
         function removeTrackers(url, customParams = []) {
             try {
-                const allTrackerParams = [...trackerParams, ...customParams];
                 const urlObj = new URL(url);
+                
+                // 淘宝商品链接特殊处理
+                if (urlObj.hostname === 'item.taobao.com' && urlObj.pathname === '/item.htm') {
+                    const id = urlObj.searchParams.get('id');
+                    if (id) {
+                        return `https://item.taobao.com/item.htm?id=${id}`;
+                    }
+                }
+                
+                const allTrackerParams = [...trackerParams, ...customParams];
                 allTrackerParams.forEach(param => urlObj.searchParams.delete(param));
                 return urlObj.toString();
             } catch (error) {
                 console.error("无效的URL:", error);
+                return url;
+            }
+        }
+
+        async function resolveShortUrl(url) {
+            try {
+                const response = await fetch(url, {
+                    method: 'HEAD',
+                    redirect: 'follow'
+                });
+                return response.url;
+            } catch (error) {
+                console.error("解析短链接时出错:", error);
                 return url;
             }
         }
@@ -102,18 +129,9 @@
                     fullUrl = shortUrl;
                     filteredUrl = removeTrackers(shortUrl);
                 } else {
-                    // 对于其他链接，调用 API 进行还原
-                    const apiUrl = `https://api.oioweb.cn/api/site/UrlRevert?url=${encodeURIComponent(shortUrl)}`;
-                    const response = await fetch(apiUrl);
-                    const data = await response.json();
-
-                    if (data.code === 200 && data.result) {
-                        fullUrl = data.result;
-                        filteredUrl = removeTrackers(fullUrl);
-                    } else {
-                        fullUrl = shortUrl;
-                        filteredUrl = removeTrackers(shortUrl);
-                    }
+                    // 使用新的 resolveShortUrl 函数来还原短链接
+                    fullUrl = await resolveShortUrl(shortUrl);
+                    filteredUrl = removeTrackers(fullUrl);
                 }
 
                 displayResults(resultDiv, fullUrl, filteredUrl);
@@ -142,5 +160,6 @@
 
         document.getElementById('parseButton').addEventListener('click', getFullUrl);
     </script>
+    <p class="footer-note">手机淘宝和小红书的链接暂时无法支持，其他链接如果出了问题可以邮件给 CatherinaGrace102@gmail.com</p>
 </body>
 </html>
