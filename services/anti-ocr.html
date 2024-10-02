@@ -31,56 +31,95 @@
 <body>
 
     <!-- 输入文本框 -->
+    <label for="textInput">文字内容：</label>
     <textarea id="textInput" placeholder="请输入文字" rows="4"></textarea><br>
+
     <!-- 每行最大字符数输入框 -->
-    <input id="maxCharsInput" type="number" min="1" value="30" placeholder="每行最大字符数"><br>
+    <label for="maxCharsInput">每行最大字符数：</label>
+    <input id="maxCharsInput" type="number" min="1" value="30"><br>
+
+    <!-- 字体大小输入框 -->
+    <label for="fontSizeInput">字体大小：</label>
+    <input id="fontSizeInput" type="number" min="1" value="14"><br>
+
+    <!-- 线条粗细输入框 -->
+    <label for="lineSizeInput">线条粗细：</label>
+    <input id="lineSizeInput" type="number" min="0.1" max="2" step="0.1" value="0.5">
+
+    <!-- 点的大小输入框 -->
+    <label for="pointSizeInput">点的大小：</label>
+    <input id="pointSizeInput" type="number" min="0.5" max="2" step="0.1" value="0.8">
+
+    <!-- 点的密度输入框 -->
+    <label for="pointDensityInput">点的密度：</label>
+    <input id="pointDensityInput" type="number" min="0.001" max="1" step="0.001" value="0.2">
+
+    <!-- 字体粗细选择 -->
+    <label for="fontWeightInput">字体粗细：</label>
+    <select id="fontWeightInput" title="选择字体粗细">
+        <option value="normal">正常</option>
+        <option value="bold">粗体</option>
+    </select>
+
     <!-- 生成图片按钮 -->
     <button onclick="generateImage()">生成图片</button><br><br>
+
     <!-- 画布 -->
     <canvas id="canvas" width="600" height="400"></canvas>
 
     <script>
+        function $(id) {
+            return document.getElementById(id);
+        }
+
         function generateImage() {
-            const canvas = document.getElementById('canvas');
+            const canvas = $('canvas');
             const ctx = canvas.getContext('2d');
-
-            const text = document.getElementById('textInput').value.trim();
-            const maxCharsPerLine = parseInt(document.getElementById('maxCharsInput').value, 10);
-
-            // 输入验证
-            if (isNaN(maxCharsPerLine) || maxCharsPerLine < 1) {
-                alert('每行最大字符数必须为正整数');
-                return;
-            }
+            
+            const text = $('textInput').value.trim();
+            const maxCharsPerLine = parseInt($('maxCharsInput').value, 10) || 30;
+            const fontSize = parseInt($('fontSizeInput').value, 10) || 10;
+            const lineSize = parseFloat($('lineSizeInput').value) || 0.5;
+            const pointSize = parseFloat($('pointSizeInput').value) || 1.8;
+            const pointDensity = parseFloat($('pointDensityInput').value) || 0.01;
+            const fontWeight = $('fontWeightInput').value || 'normal';
 
             if (text.length === 0) {
                 alert('请输入要生成图片的文字');
+                $('textInput').focus();
                 return;
             }
 
+            // 设置画布尺寸
+            const lineHeight = fontSize * 4; // 行高为字体大小的4倍
+            const lineSpacing = fontSize * 1.5; // 行间距为字体大小的1倍
+            const totalLineHeight = lineHeight + lineSpacing; // 总行高（包含间距）
             const lines = splitTextIntoLines(text, maxCharsPerLine);
-            const lineHeight = 50; // 行高
-            const xOffset = 50; // X轴偏移量
-            const yOffset = 50; // Y轴偏移量
-
-            ctx.font = "30px 'Microsoft YaHei', sans-serif"; //字体大小
-            ctx.fillStyle = 'black';
-            ctx.textBaseline = 'top';
-
-            // 计算画布高度并设置
-            const requiredHeight = lines.length * lineHeight + 3 * yOffset;
-            canvas.height = Math.max(requiredHeight, 250); // 最小高度
+            canvas.width = fontSize * maxCharsPerLine + 100;
+            canvas.height = Math.max(lines.length * totalLineHeight + 100, 300);
 
             // 清空画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 设置字体
+            ctx.font = `${fontWeight} ${fontSize}px 'Microsoft YaHei', sans-serif`;
 
             // 绘制文本
+            const xOffset = 50;
+            const yOffset = 50;
             lines.forEach((line, index) => {
-                const angle = (Math.random() - 0.5) * (Math.PI / 9); // 缩小旋转角度范围
+                // 计算随机偏转角度
+                // Math.random() 生成 0 到 1 之间的随机数
+                // 减去 0.5 使范围变为 -0.5 到 0.5
+                // 乘以 (Math.PI / 9) 将范围调整为 约 -10 度到 10 度（弧度制）
+                const angle = (Math.random() - 0.5) * (Math.PI / 18);
+                
                 ctx.save();
                 ctx.translate(xOffset, yOffset + index * lineHeight);
                 ctx.rotate(angle);
+                ctx.fillStyle = 'black'; // 设置文字颜色
                 ctx.fillText(line, 0, 0);
                 ctx.restore();
             });
@@ -102,7 +141,7 @@
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
-                ctx.strokeStyle = 'rgba(0,0,0,0.9)'; // 对文字的遮挡
+                ctx.strokeStyle = 'rgba(0,0,0,1)'; // 对文字的遮挡
                 ctx.lineWidth = Math.random() * 0.5 + 0.1; // 减小线条宽度范围
                 ctx.stroke();
 
@@ -110,45 +149,41 @@
             }
 
             // 绘制不规则点
-            const numPoints = Math.floor((canvas.width * canvas.height) / 100); // 增加点的数量
+            const numPoints = Math.floor((canvas.width * canvas.height) * pointDensity);
             for (let i = 0; i < numPoints; i++) {
                 const x = Math.random() * canvas.width;
                 const y = Math.random() * canvas.height;
-                const radius = Math.random() * 1.5 + 0.5; // 点的半径在0.5到2之间
+                const randomSize = pointSize + (Math.random() - 0.5) * 0.4; // 在pointSize基础上±0.2的随机变化
 
                 ctx.beginPath();
-                ctx.arc(x, y, radius, 0, 2 * Math.PI);
-                ctx.fillStyle = 'rgba(0,0,0,0.9)'; // 降低不透明度
+                ctx.arc(x, y, randomSize / 2, 0, 2 * Math.PI);
+                ctx.fillStyle = 'rgba(0,0,0,1)';
                 ctx.fill();
             }
 
             // 绘制随机间距的x轴平行线
-            const numXLines = Math.floor(canvas.height / 2); // 增加线条数量
+            const numXLines = Math.floor(canvas.height / 2);
             for (let i = 0; i < numXLines; i++) {
                 let y = Math.random() * canvas.height;
-                const gap = Math.random() * 1; // 
-
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvas.width, y);
-                ctx.strokeStyle = 'rgba(0,0,0,0.9)'; // 降低不透明度
-                ctx.lineWidth = 0.2; // 固定较细的线宽
+                ctx.strokeStyle = 'rgba(0,0,0,1)';
+                ctx.lineWidth = lineSize;
                 ctx.stroke();
-
-                y += gap;
             }
 
-            // 绘制随机间距的y轴平行线
-            const numYLines = Math.floor(canvas.width / 3); // 增加线条数量
+            // 绘制随机间的y轴平行线
+            const numYLines = Math.floor(canvas.width / 3);
             for (let i = 0; i < numYLines; i++) {
                 let x = Math.random() * canvas.width;
-                const gap = Math.random() * 2; // 最大间距
+                const gap = Math.random() * 1.5; // 最大间距
 
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, canvas.height);
-                ctx.strokeStyle = 'rgba(0,0,0,0.9)'; // 降低不透明度
-                ctx.lineWidth = 0.2; // 固定较细的线宽
+                ctx.strokeStyle = 'rgba(0,0,0,1'; // 降低不透明度
+                ctx.lineWidth = 0.3; // 固定较细的线宽
                 ctx.stroke();
 
                 x += gap;
@@ -170,7 +205,7 @@
         // 初始时调整画布尺寸
         window.addEventListener('DOMContentLoaded', adjustCanvasSize);
 
-        // 将文本按照每行最大字符数分割成多行的函数
+        // 将文本按照每行最大字符数割成多行的函数
         function splitTextIntoLines(text, maxCharsPerLine) {
             const lines = [];
             let currentIndex = 0;
@@ -197,6 +232,20 @@
 
             return lines;
         }
+
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // 在页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            
+            // 为输入框绑定事件
+            $('lineSizeInput').addEventListener('change', generateImage);
+            $('pointSizeInput').addEventListener('change', generateImage);
+            $('pointDensityInput').addEventListener('change', generateImage);
+            $('fontWeightInput').addEventListener('change', generateImage);
+        });
     </script>
 </body>
 </html>
