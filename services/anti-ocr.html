@@ -26,6 +26,23 @@
             font-size: 16px;
             cursor: pointer;
         }
+        /* 添加到现有的 style 标签中 */
+        .input-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .input-row label {
+            width: 150px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        .input-row input,
+        .input-row select,
+        .input-row textarea {
+            width: 200px;
+        }
     </style>
 </head>
 <body>
@@ -34,32 +51,45 @@
     <label for="textInput">文字内容：</label>
     <textarea id="textInput" placeholder="请输入文字" rows="4"></textarea><br>
 
+
     <!-- 每行最大字符数输入框 -->
-    <label for="maxCharsInput">每行最大字符数：</label>
-    <input id="maxCharsInput" type="number" min="1" value="30"><br>
+    <div class="input-row">
+        <label for="maxCharsInput">每行最大字符数：</label>
+        <input id="maxCharsInput" type="number" min="1" value="30">
+    </div>
 
     <!-- 字体大小输入框 -->
-    <label for="fontSizeInput">字体大小：</label>
-    <input id="fontSizeInput" type="number" min="1" value="14"><br>
+    <div class="input-row">
+        <label for="fontSizeInput">字体大小：</label>
+        <input id="fontSizeInput" type="number" min="1" value="14">
+    </div>
 
     <!-- 线条粗细输入框 -->
-    <label for="lineSizeInput">线条粗细：</label>
-    <input id="lineSizeInput" type="number" min="0.1" max="2" step="0.1" value="0.5">
+    <div class="input-row">
+        <label for="lineSizeInput">线条粗细：</label>
+        <input id="lineSizeInput" type="number" min="0.1" max="2" step="0.1" value="0.5">
+    </div>
 
     <!-- 点的大小输入框 -->
-    <label for="pointSizeInput">点的大小：</label>
-    <input id="pointSizeInput" type="number" min="0.5" max="2" step="0.1" value="0.8">
+    <div class="input-row">
+        <label for="pointSizeInput">点的大小：</label>
+        <input id="pointSizeInput" type="number" min="0.5" max="2" step="0.1" value="0.8">
+    </div>
 
     <!-- 点的密度输入框 -->
-    <label for="pointDensityInput">点的密度：</label>
-    <input id="pointDensityInput" type="number" min="0.001" max="1" step="0.001" value="0.2">
+    <div class="input-row">
+        <label for="pointDensityInput">点的密度：</label>
+        <input id="pointDensityInput" type="number" min="0.001" max="1" step="0.001" value="0.2">
+    </div>
 
     <!-- 字体粗细选择 -->
-    <label for="fontWeightInput">字体粗细：</label>
-    <select id="fontWeightInput" title="选择字体粗细">
-        <option value="normal">正常</option>
-        <option value="bold">粗体</option>
-    </select>
+    <div class="input-row">
+        <label for="fontWeightInput">字体粗细：</label>
+        <select id="fontWeightInput" title="选择字体粗细">
+            <option value="normal">正常</option>
+            <option value="bold">粗体</option>
+        </select>
+    </div>
 
     <!-- 生成图片按钮 -->
     <button onclick="generateImage()">生成图片</button><br><br>
