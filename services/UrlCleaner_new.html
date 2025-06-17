@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL反追踪</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        input[type="text"] {
+            padding: 5px 10px;
+            font-size: 16px;
+            width: 300px;
+            max-width: 80%;
+        }
+
+        button {
+            padding: 5px 15px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #result span {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        #copyButton {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .footer-note {
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>URL短链接还原&反追踪</h1>
+    <input type="text" id="inputText" placeholder="输入文本或链接">
+    <button id="parseButton">解析</button>
+    <div id="result"></div>
+
+    <script>
+        function extractUrl(input) {
+            const urlPattern = /(https?:\/\/[^\s]+)/gi;
+            const match = input.match(urlPattern);
+            return match ? match[0] : null;
+        }
+
+        // 长链接域名白名单 - 这些域名即使路径短也不进行短链接展开
+        const longLinkWhitelist = [
+            // 社交媒体平台
+            'zhihu.com','www.zhihu.com',
+        ];
+
+        // 已知的短链接域名
+        const shortLinkDomains = [
+            'bit.ly', 'tinyurl.com', 't.co', 'goo.gl', 'ow.ly', 'buff.ly',
+            'short.link', 'is.gd', 'v.ht', 'tb.cn', '3.cn', 'xhslink.com',
+            'dwz.cn', 'suo.im', 'mrw.so', 'url.cn', 'sina.lt', 'qq.cn',
+            'u.to', 'tiny.cc', 'rebrand.ly', 'cutt.ly', 'short.io'
+        ];
+
+        // 判断是否应该进行短链接展开
+        function shouldExpandAsShortLink(url) {
+            try {
+                const urlObj = new URL(url);
+                const hostname = urlObj.hostname.toLowerCase();
+                
+                // 1. 检查是否在长链接白名单中
+                const isInWhitelist = longLinkWhitelist.some(domain => 
+                    hostname === domain || hostname.endsWith('.' + domain)
+                );
+                
+                if (isInWhitelist) {
+                    console.log(`域名 ${hostname} 在白名单中，跳过短链接展开`);
+                    return false; // 白名单域名不进行短链接展开
+                }
+                
+                // 2. 检查是否是已知的短链接域名
+                const isKnownShortDomain = shortLinkDomains.some(domain => 
+                    hostname === domain || hostname.endsWith('.' + domain)
+                );
+                
+                if (isKnownShortDomain) {
+                    console.log(`检测到已知短链接域名: ${hostname}`);
+                    return true; // 已知短链接域名必须展开
+                }
+                
+                // 3. 对于其他域名，通过路径长度判断
+                const path = urlObj.pathname;
+                const isShortPath = path.length <= 15 && /^\/[a-zA-Z0-9_-]+\/?$/.test(path);
+                
+                if (isShortPath) {
+                    console.log(`检测到疑似短链接 (路径较短): ${hostname}${path}`);
+                    return true; // 路径短且不在白名单的视为短链接
+                }
+                
+                console.log(`判定为长链接: ${hostname}${path}`);
+                return false; // 其他情况视为长链接
+                
+            } catch (error) {
+                console.error("URL解析失败:", error);
+                return false; // 解析失败时不展开
+            }
+        }
+
+        // 预定义的跟踪器参数列表
+        const trackerParams = [
+            // 通用追踪参数
+            'ref', 'referrer', 'gclid', 'fbclid', 'dclid', 'msclkid', 'icid',
+            'mcid', 'gbraid', 'wbraid', 's_kwcid', 'utm_psn', 'campaign', 'utm_source', 
+            'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id', 
+            'utm_nooverride', 'utm_expid', 'utm_referrer', 'uct2',
+            
+            // 淘宝/天猫追踪参数
+            '-Arouter', 'buvid', 'from_spmid', 'is_story_h5', 'mid', 'p', 'plat_id', 
+            'share_from', 'share_medium', 'share_plat', 'share_session_id', 
+            'share_source', 'share_tag', 'spmid', 'timestamp', 'unique_k', 'up_id',
+            'app_version', 'dlt', 'channelId', 'ADTAG', 'openinqqmusic', 'songtype', 'source',
+            'vd_source', 'ut_sk', 'sourceType', 'suid', 'shareUniqueId', 'un', 'share_crt_v', 
+            'spm', 'wxsign', 'tbSocialPopKey', 'short_name', 'sp_tk', 'bxsign',
+            
+            // 小红书追踪参数
+            'app_platform', 'share_from_user_hidden', 'type',
+            'author_share', 'xhsshare', 'shareRedId', 'apptime', 'share_id',
+            
+            // 京东追踪参数
+            'utm_term', 'gx', 'gxd', 'utm_campaign', 'utm_medium', 'ad_od', 'appid', 'evtype', 'evurl', 'rpid',
+            
+            // 抖音追踪参数
+            'previous_page', 'enter_method', 'enter_from', 'is_copy_url', 'checksum',
+            
+            // 知乎追踪参数
+            'utm_oi', 'utm_lens', 'utm_id', 'utm_psn',
+            
+            // 微信追踪参数
+            'from', 'isappinstalled', 'scene', 'subscene', 'sessionid', 'clicktime', 'enterid',
+            
+            // B站追踪参数
+            'share_source', 'share_medium', 'bbid', 'ts', 'share_plat', 'share_session_id', 'share_tag',
+            
+            // 通用社交媒体参数
+            'igshid', 'story_media_id', '_r', 'hl', '_nc_ht', '_nc_cat', '_nc_ohc', 'oh', 'oe','userid'
+        ];
+
+        // 处理京东重定向链接
+        function handleJdRedirect(url) {
+            try {
+                const urlObj = new URL(url);
+                
+                // 检查是否是京东的重定向链接
+                if (urlObj.hostname.includes('jd.com') && urlObj.searchParams.has('returnurl')) {
+                    const returnUrl = decodeURIComponent(urlObj.searchParams.get('returnurl'));
+                    return returnUrl;
+                }
+                
+                return url;
+            } catch (error) {
+                console.error("处理京东重定向失败:", error);
+                return url;
+            }
+        }
+
+        // 去除跟踪器的函数
+        function removeTrackers(url, customParams = []) {
+            try {
+                // 首先处理京东重定向
+                url = handleJdRedirect(url);
+                
+                const urlObj = new URL(url);
+                
+                // 淘宝商品链接特殊处理
+                if (urlObj.hostname === 'item.taobao.com' && urlObj.pathname === '/item.htm') {
+                    const id = urlObj.searchParams.get('id');
+                    if (id) {
+                        return `https://item.taobao.com/item.htm?id=${id}`;
+                    }
+                }
+                
+                // 京东商品链接特殊处理
+                if (urlObj.hostname.includes('jd.com') && (urlObj.pathname.includes('/product/') || urlObj.pathname.includes('/item/'))) {
+                    const pathMatch = urlObj.pathname.match(/\/(product|item)\/(\d+)\.html/);
+                    if (pathMatch) {
+                        return `https://item.jd.com/product/${pathMatch[2]}.html`;
+                    }
+                }
+                
+                // 小红书链接特殊处理 - 只删除指定的追踪参数
+                if (urlObj.hostname.includes('xiaohongshu.com')) {
+                    const xhsTrackingParams = [
+                        'app_platform',
+                        'app_version', 
+                        'share_from_user_hidden',
+                        'type',
+                        'author_share',
+                        'xhsshare',
+                        'shareRedId',
+                        'apptime',
+                        'share_id'
+                    ];
+                    
+                    // 只删除小红书特定的追踪参数，保留其他参数
+                    xhsTrackingParams.forEach(param => urlObj.searchParams.delete(param));
+                    return urlObj.toString();
+                }
+                
+                // 抖音链接特殊处理
+                if (urlObj.hostname.includes('douyin.com')) {
+                    const pathMatch = urlObj.pathname.match(/\/video\/(\d+)/);
+                    if (pathMatch) {
+                        return `https://www.douyin.com/video/${pathMatch[1]}`;
+                    }
+                }
+                
+                const allTrackerParams = [...trackerParams, ...customParams];
+                allTrackerParams.forEach(param => urlObj.searchParams.delete(param));
+                return urlObj.toString();
+            } catch (error) {
+                console.error("无效的URL:", error);
+                return url;
+            }
+        }
+
+        async function resolveShortUrl(url) {
+            try {
+                // 使用Cloudflare Worker来解析短链接
+                // 请将下面的URL替换为您实际部署的Worker URL
+                const workerUrl = 'https://url-resolver.zzt2930.workers.dev/';
+                
+                const response = await fetch(workerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Worker请求失败: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.resolvedUrl) {
+                    return data.resolvedUrl;
+                } else {
+                    throw new Error(data.error || '解析失败');
+                }
+            } catch (error) {
+                console.error("使用Worker解析短链接时出错:", error);
+                // 如果Worker失败，回退到原来的方法
+                try {
+                    const response = await fetch(url, {
+                        method: 'HEAD',
+                        redirect: 'follow'
+                    });
+                    return response.url;
+                } catch (fallbackError) {
+                    console.error("回退方法也失败:", fallbackError);
+                    return url;
+                }
+            }
+        }
+
+        async function getFullUrl() {
+            const inputText = document.getElementById("inputText").value.trim();
+            const shortUrl = extractUrl(inputText);
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = '';
+
+            if (!shortUrl) {
+                resultDiv.textContent = "请输入有效的URL";
+                return;
+            }
+
+            try {
+                let fullUrl, filteredUrl;
+
+                // 判断是否需要进行短链接展开
+                if (shouldExpandAsShortLink(shortUrl)) {
+                    // 需要短链接展开
+                    console.log("需要短链接展开，开始解析:", shortUrl);
+                    fullUrl = await resolveShortUrl(shortUrl);
+                    filteredUrl = removeTrackers(fullUrl);
+                } else {
+                    // 直接进行追踪器清理（白名单域名或长链接）
+                    console.log("跳过短链接展开，直接清理追踪器:", shortUrl);
+                    fullUrl = shortUrl;
+                    filteredUrl = removeTrackers(shortUrl);
+                }
+
+                displayResults(resultDiv, fullUrl, filteredUrl);
+            } catch (error) {
+                console.error("出现错误:", error);
+                resultDiv.textContent = "解析失败，请检查网络连接或稍后再试。";
+            }
+        }
+
+        function displayResults(resultDiv, fullUrl, filteredUrl) {
+            resultDiv.innerHTML = `
+                <span>完整链接: ${fullUrl}</span>
+                <span>过滤后链接: ${filteredUrl}</span>
+                <button id="copyButton">复制过滤后链接</button>
+            `;
+
+            document.getElementById('copyButton').addEventListener('click', () => {
+                navigator.clipboard.writeText(filteredUrl)
+                    .then(() => alert('链接已复制到剪贴板'))
+                    .catch(err => {
+                        console.error('复制失败:', err);
+                        alert('复制失败，请手动复制链接');
+                    });
+            });
+        }
+
+        document.getElementById('parseButton').addEventListener('click', getFullUrl);
+    </script>
+    <p class="footer-note">如果出了问题可以邮件给 report@cntt.uk</p>
+</body>
+</html>
