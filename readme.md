@@ -9,3 +9,8 @@
 anti-ocr目前还在寻找可读性和反识别的平衡点
 
 
+API 请求格式  
+https://url-resolver.zzt2930.workers.dev/?url=**  
+
+返回值参考：  
+{"originalUrl":"*","resolvedUrl":"*","success":true}
