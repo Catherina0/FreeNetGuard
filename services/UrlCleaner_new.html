@@ -134,6 +134,10 @@
             'app_version', 'dlt', 'channelId', 'ADTAG', 'openinqqmusic', 'songtype', 'source',
             'vd_source', 'ut_sk', 'sourceType', 'suid', 'shareUniqueId', 'un', 'share_crt_v', 
             'spm', 'wxsign', 'tbSocialPopKey', 'short_name', 'sp_tk', 'bxsign',
+
+            // 网易云音乐参数
+            'fx-wechatnew', 'fx-wxqd', 'fx-wordtest', 'fx-listentest', 'H5_DownloadVIPGift',
+            'playerUIModeId', 'PlayerStyles_SynchronousSharing', 'sc', 'tn',
             
             // 小红书追踪参数
             'app_platform', 'share_from_user_hidden', 'type',
@@ -227,6 +231,14 @@
                     const pathMatch = urlObj.pathname.match(/\/video\/(\d+)/);
                     if (pathMatch) {
                         return `https://www.douyin.com/video/${pathMatch[1]}`;
+                    }
+                }
+                
+                // 网易云音乐链接特殊处理 - 只保留 song?id 参数
+                if (urlObj.hostname.includes('music.163.com') && urlObj.pathname.includes('/song')) {
+                    const id = urlObj.searchParams.get('id');
+                    if (id) {
+                        return `https://y.music.163.com/m/song?id=${id}`;
                     }
                 }
                 
